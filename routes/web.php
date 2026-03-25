@@ -17,4 +17,6 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::resource('users', App\Http\Controllers\UserController::class)->middleware('auth');
 
 // 5. Resource Routes for Orders
+Route::get('orders/archived', [App\Http\Controllers\OrderController::class, 'archived'])->name('orders.archived')->middleware('auth');
+Route::patch('orders/{order}/restore', [App\Http\Controllers\OrderController::class, 'restore'])->name('orders.restore')->middleware('auth');
 Route::resource('orders', App\Http\Controllers\OrderController::class)->middleware('auth');

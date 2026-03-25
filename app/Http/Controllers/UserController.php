@@ -13,7 +13,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::paginate(10);
+        $users = User::withTrashed()->paginate(10);
         return view('users.index', compact('users'));
     }
 
@@ -34,12 +34,16 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|in:admin,manager,employee',
+            'department' => 'nullable|in:sales,purchasing,warehouse,route',
         ]);
 
         User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'department' => $request->department,
         ]);
 
         return redirect()->route('users.index')->with('success', 'Usuario creado correctamente.');
@@ -71,15 +75,27 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
+            'role' => 'required|in:admin,manager,employee',
+            'department' => 'nullable|in:sales,purchasing,warehouse,route',
+            'is_active' => 'boolean',
         ]);
 
         $user->name = $request->name;
         $user->email = $request->email;
-        
+        $user->role = $request->role;
+        $user->department = $request->department;
+
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
-        
+
+        // Handle active/inactive status
+        if ($request->has('is_active') && !$request->is_active) {
+            $user->delete(); // Soft delete to make inactive
+        } elseif ($request->is_active && $user->trashed()) {
+            $user->restore(); // Restore if was inactive
+        }
+
         $user->save();
 
         return redirect()->route('users.index')->with('success', 'Usuario actualizado correctamente.');

@@ -27,9 +27,49 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="role" class="form-label">Rol</label>
+                            <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
+                                <option value="">Seleccionar rol</option>
+                                <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Administrador</option>
+                                <option value="manager" {{ old('role', $user->role) == 'manager' ? 'selected' : '' }}>Gerente</option>
+                                <option value="employee" {{ old('role', $user->role) == 'employee' ? 'selected' : '' }}>Empleado</option>
+                            </select>
+                            @error('role')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="department" class="form-label">Departamento</label>
+                            <select class="form-select @error('department') is-invalid @enderror" id="department" name="department">
+                                <option value="">Sin asignar</option>
+                                <option value="sales" {{ old('department', $user->department) == 'sales' ? 'selected' : '' }}>Ventas</option>
+                                <option value="purchasing" {{ old('department', $user->department) == 'purchasing' ? 'selected' : '' }}>Compras</option>
+                                <option value="warehouse" {{ old('department', $user->department) == 'warehouse' ? 'selected' : '' }}>Almacén</option>
+                                <option value="route" {{ old('department', $user->department) == 'route' ? 'selected' : '' }}>Ruta</option>
+                            </select>
+                            @error('department')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" {{ old('is_active', !$user->trashed()) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_active">
+                                Usuario activo
+                            </label>
+                        </div>
+                        @error('is_active')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <hr class="my-4">
-                    <h6 class="mb-3">Cambiar contraseña (opcionál)</h6>
+                    <h6 class="mb-3">Cambiar contraseña (opcional)</h6>
                     
                     <div class="row mb-3">
                         <div class="col-md-6">

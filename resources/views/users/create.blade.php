@@ -26,7 +26,35 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="role" class="form-label">Rol</label>
+                            <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
+                                <option value="">Seleccionar rol</option>
+                                <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Administrador</option>
+                                <option value="manager" {{ old('role') == 'manager' ? 'selected' : '' }}>Gerente</option>
+                                <option value="employee" {{ old('role') == 'employee' ? 'selected' : '' }}>Empleado</option>
+                            </select>
+                            @error('role')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="department" class="form-label">Departamento</label>
+                            <select class="form-select @error('department') is-invalid @enderror" id="department" name="department">
+                                <option value="">Sin asignar</option>
+                                <option value="sales" {{ old('department') == 'sales' ? 'selected' : '' }}>Ventas</option>
+                                <option value="purchasing" {{ old('department') == 'purchasing' ? 'selected' : '' }}>Compras</option>
+                                <option value="warehouse" {{ old('department') == 'warehouse' ? 'selected' : '' }}>Almacén</option>
+                                <option value="route" {{ old('department') == 'route' ? 'selected' : '' }}>Ruta</option>
+                            </select>
+                            @error('department')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="password" class="form-label">Contraseña</label>

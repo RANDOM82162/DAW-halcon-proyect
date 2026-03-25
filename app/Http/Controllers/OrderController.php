@@ -105,4 +105,22 @@ class OrderController extends Controller
         $order->delete();
         return redirect()->route('orders.index')->with('success', 'Pedido eliminado correctamente.');
     }
+
+    /**
+     * Display a listing of archived (soft deleted) orders.
+     */
+    public function archived()
+    {
+        $archivedOrders = Order::onlyTrashed()->with('user')->paginate(10);
+        return view('orders.archived', compact('archivedOrders'));
+    }
+
+    /**
+     * Restore the specified archived order.
+     */
+    public function restore(Order $order)
+    {
+        $order->restore();
+        return redirect()->route('orders.archived')->with('success', 'Pedido restaurado correctamente.');
+    }
 }

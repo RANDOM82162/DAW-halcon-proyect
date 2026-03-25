@@ -5,13 +5,8 @@
     <div class="col-12">
         <div class="card mb-4">
             <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
-                <span><svg class="icon me-2"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-cart') }}"></use></svg> Gestión de Pedidos</span>
-                <div class="d-flex gap-2">
-                    <a href="{{ route('orders.archived') }}" class="btn btn-sm btn-outline-secondary">
-                        <svg class="icon me-1"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-archive') }}"></use></svg> Archivados
-                    </a>
-                    <a href="{{ route('orders.create') }}" class="btn btn-sm btn-primary">Nuevo Pedido</a>
-                </div>
+                <span><svg class="icon me-2"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-archive') }}"></use></svg> Pedidos Archivados</span>
+                <a href="{{ route('orders.index') }}" class="btn btn-sm btn-secondary">Volver a Pedidos Activos</a>
             </div>
             <div class="card-body">
                 @if(session('success'))
@@ -39,11 +34,12 @@
                                 <th>Fecha Pedido</th>
                                 <th>Monto Total</th>
                                 <th>Usuario</th>
+                                <th>Fecha Eliminación</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($orders as $order)
+                            @forelse ($archivedOrders as $order)
                                 <tr>
                                     <td>{{ $order->id }}</td>
                                     <td>{{ $order->customer_number }}</td>
@@ -56,20 +52,14 @@
                                     <td>{{ $order->order_date->format('d/m/Y') }}</td>
                                     <td>${{ number_format($order->total_amount, 2) }}</td>
                                     <td>{{ $order->user->name }}</td>
+                                    <td>{{ $order->deleted_at->format('d/m/Y H:i') }}</td>
                                     <td>
                                         <div class="d-flex gap-2">
-                                            <a href="{{ route('orders.show', $order) }}" class="btn btn-sm btn-secondary">
-                                                <svg class="icon me-1"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-eye') }}"></use></svg> Ver
-                                            </a>
-                                            <a href="{{ route('orders.edit', $order) }}" class="btn btn-sm btn-info text-white">
-                                                <svg class="icon me-1"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-pencil') }}"></use></svg> Editar
-                                            </a>
-
-                                            <form action="{{ route('orders.destroy', $order) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este pedido?');">
+                                            <form action="{{ route('orders.restore', $order) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de que deseas restaurar este pedido?');">
                                                 @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger text-white">
-                                                    <svg class="icon me-1"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-trash') }}"></use></svg> Eliminar
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <svg class="icon me-1"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-reload') }}"></use></svg> Restaurar
                                                 </button>
                                             </form>
                                         </div>
@@ -77,7 +67,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">No hay pedidos registrados.</td>
+                                    <td colspan="9" class="text-center">No hay pedidos archivados.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -85,7 +75,7 @@
                 </div>
 
                 <div class="d-flex justify-content-center mt-3">
-                    {{ $orders->links() }}
+                    {{ $archivedOrders->links() }}
                 </div>
             </div>
         </div>

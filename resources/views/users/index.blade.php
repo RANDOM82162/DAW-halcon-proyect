@@ -30,6 +30,9 @@
                                 <th>ID</th>
                                 <th>Nombre</th>
                                 <th>Email</th>
+                                <th>Rol</th>
+                                <th>Departamento</th>
+                                <th>Estado</th>
                                 <th>Fecha Registro</th>
                                 <th>Acciones</th>
                             </tr>
@@ -40,13 +43,26 @@
                                     <td>{{ $user->id }}</td>
                                     <td>{{ $user->name }}</td>
                                     <td>{{ $user->email }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ $user->role === 'admin' ? 'danger' : ($user->role === 'manager' ? 'warning' : 'info') }}">
+                                            {{ ucfirst($user->role) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $user->department ? ucfirst($user->department) : 'Sin asignar' }}</td>
+                                    <td>
+                                        @if($user->trashed())
+                                            <span class="badge bg-secondary">Inactivo</span>
+                                        @else
+                                            <span class="badge bg-success">Activo</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $user->created_at->format('d/m/Y') }}</td>
                                     <td>
                                         <div class="d-flex gap-2">
                                             <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-info text-white">
                                                 <svg class="icon me-1"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-pencil') }}"></use></svg> Editar
                                             </a>
-                                            
+
                                             <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este usuario?');">
                                                 @csrf
                                                 @method('DELETE')
@@ -59,7 +75,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center">No hay usuarios registrados.</td>
+                                    <td colspan="8" class="text-center">No hay usuarios registrados.</td>
                                 </tr>
                             @endforelse
                         </tbody>
