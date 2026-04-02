@@ -13,7 +13,7 @@ class HomeController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        // $this->middleware('auth');
     }
 
     /**
@@ -21,8 +21,15 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('home');
+        $order = null;
+        $searched = false;
+        if ($request->has('invoice_number') && $request->invoice_number) {
+            $order = \App\Models\Order::where('invoice_number', $request->invoice_number)->first();
+            $searched = true;
+        }
+
+        return view('home', compact('order', 'searched'));
     }
 }

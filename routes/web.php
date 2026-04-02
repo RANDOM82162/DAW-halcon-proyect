@@ -2,10 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 
-// 1. Ruta Raíz: Apunta a nuestra nueva interfaz de CoreUI
+// 1. Ruta Raíz: Vista principal pública
 Route::get('/', function () {
-    return view('dashboard');
-})->middleware('auth');
+    return view('home');
+});
 
 // 2. Rutas del andamiaje de Autenticación (Login, Registro, Recuperación)
 Auth::routes();

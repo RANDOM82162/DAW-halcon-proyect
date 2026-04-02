@@ -42,9 +42,19 @@
                 <a class="nav-link" href="{{ url('/') }}">
                     <svg class="nav-icon">
                         <use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-speedometer') }}"></use>
-                    </svg> Dashboard
+                    </svg> @if(auth()->check()) Dashboard @else Inicio @endif
                 </a>
             </li>
+            @guest
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('login') }}">
+                    <svg class="nav-icon">
+                        <use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-lock-locked') }}"></use>
+                    </svg> Login
+                </a>
+            </li>
+            @endguest
+            @auth
             <li class="nav-item">
                 <a class="nav-link {{ request()->is('users*') ? 'active' : '' }}" href="{{ route('users.index') }}">
                     <svg class="nav-icon">
@@ -59,6 +69,7 @@
                     </svg> Pedidos
                 </a>
             </li>
+            @endauth
         </ul>
         
         <div class="sidebar-footer border-top d-none d-md-flex">     
