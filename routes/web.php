@@ -3,9 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 // 1. Ruta Raíz: Vista principal pública
-Route::get('/', function () {
-    return view('home');
-});
+Route::get('/', [App\Http\Controllers\HomeController::class, 'index']);
 
 // 2. Rutas del andamiaje de Autenticación (Login, Registro, Recuperación)
 Auth::routes();
