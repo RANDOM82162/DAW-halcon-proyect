@@ -64,27 +64,50 @@
 
                         @if($searched)
                             @if($order)
-                                @if($order->status == 'delivered')
-                                    <div class="mt-4">
-                                        <h5>Pedido Encontrado</h5>
-                                        <p>Estado: Entregado</p>
-                                        <p>No hay foto de entrega disponible.</p>
+                                <div class="mt-4 p-4 border rounded bg-light">
+                                    <h5 class="mb-3 fw-bold">Información del Pedido</h5>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <p class="mb-2"><strong>Número de Factura:</strong> {{ $order->invoice_number }}</p>
+                                            <p class="mb-2"><strong>Número de Cliente:</strong> {{ $order->customer_number }}</p>
+                                            <p class="mb-2"><strong>Monto Total:</strong> ${{ number_format($order->total_amount, 2) }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-2"><strong>Fecha de Pedido:</strong> {{ $order->order_date->format('d/m/Y') }}</p>
+                                            <p class="mb-2"><strong>Estado:</strong> 
+                                                <span class="badge bg-{{ $order->status === 'delivered' ? 'success' : ($order->status === 'in_route' ? 'warning' : ($order->status === 'in_process' ? 'info' : 'secondary')) }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                                                </span>
+                                            </p>
+                                            @if($order->delivery_date)
+                                                <p class="mb-2"><strong>Fecha de Entrega:</strong> {{ $order->delivery_date->format('d/m/Y') }}</p>
+                                            @endif
+                                        </div>
                                     </div>
-                                @elseif($order->status == 'in_process')
-                                    <div class="mt-4">
-                                        <h5>Pedido Encontrado</h5>
-                                        <p>Estado: En Proceso</p>
-                                        <p>Proceso: {{ $order->status }}</p>
-                                        <p>Fecha: {{ $order->delivery_date ? $order->delivery_date->format('d/m/Y') : 'No especificada' }}</p>
-                                    </div>
-                                @else
-                                    <div class="mt-4">
-                                        <h5>Pedido Encontrado</h5>
-                                        <p>Estado: {{ $order->status }}</p>
-                                    </div>
-                                @endif
+
+                                    @if($order->status == 'delivered')
+                                        @if($order->delivery_photo)
+                                            <div class="mt-4 pt-3 border-top">
+                                                <h6 class="mb-3">Foto de Entrega</h6>
+                                                <div class="text-center">
+                                                    <img src="{{ Storage::url($order->delivery_photo) }}" alt="Foto de entrega" class="img-fluid rounded" style="max-width: 100%; max-height: 500px;">
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="mt-4 pt-3 border-top">
+                                                <p class="text-muted"><em>No hay foto de entrega disponible.</em></p>
+                                            </div>
+                                        @endif
+                                    @else
+                                        <div class="mt-4 pt-3 border-top">
+                                            <p class="text-muted"><em>La foto de entrega estará disponible cuando el pedido sea entregado.</em></p>
+                                        </div>
+                                    @endif
+                                </div>
                             @else
-                                <div class="mt-4 alert alert-danger">
+                                <div class="mt-4 alert alert-danger" role="alert">
+                                    <svg class="icon me-2"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-info') }}"></use></svg>
                                     No se encontró ningún pedido con ese número de factura.
                                 </div>
                             @endif

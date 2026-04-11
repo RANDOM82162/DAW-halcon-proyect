@@ -17,4 +17,6 @@ Route::resource('users', App\Http\Controllers\UserController::class)->middleware
 // 5. Resource Routes for Orders
 Route::get('orders/archived', [App\Http\Controllers\OrderController::class, 'archived'])->name('orders.archived')->middleware('auth');
 Route::patch('orders/{order}/restore', [App\Http\Controllers\OrderController::class, 'restore'])->name('orders.restore')->middleware('auth');
+Route::get('orders/{order}/photo', [App\Http\Controllers\OrderController::class, 'photoForm'])->name('orders.photo')->middleware('auth');
+Route::post('orders/{order}/photo', [App\Http\Controllers\OrderController::class, 'storePhoto'])->name('orders.storePhoto')->middleware('auth');
 Route::resource('orders', App\Http\Controllers\OrderController::class)->middleware('auth');

@@ -123,4 +123,42 @@ class OrderController extends Controller
         $order->restore();
         return redirect()->route('orders.archived')->with('success', 'Pedido restaurado correctamente.');
     }
+
+    /**
+     * Show the form for uploading delivery photo.
+     */
+    public function photoForm(Order $order)
+    {
+        return view('orders.photo', compact('order'));
+    }
+
+    /**
+     * Store the delivery photo.
+     */
+    public function storePhoto(Request $request, Order $order)
+    {
+        $request->validate([
+            'delivery_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ], [
+            'delivery_photo.required' => 'Debe seleccionar una foto.',
+            'delivery_photo.image' => 'El archivo debe ser una imagen.',
+            'delivery_photo.mimes' => 'La imagen debe ser de tipo: jpeg, png, jpg, gif.',
+            'delivery_photo.max' => 'La imagen no debe superar 2MB.',
+        ]);
+
+        if ($request->hasFile('delivery_photo')) {
+            // Eliminar la foto anterior si existe
+            if ($order->delivery_photo && \Storage::exists('public/' . $order->delivery_photo)) {
+                \Storage::delete('public/' . $order->delivery_photo);
+            }
+
+            // Almacenar la nueva foto
+            $path = $request->file('delivery_photo')->store('deliveries', 'public');
+            $order->update(['delivery_photo' => $path]);
+
+            return redirect()->route('orders.index')->with('success', 'Foto de entrega guardada correctamente.');
+        }
+
+        return redirect()->back()->with('error', 'Error al procesar la foto.');
+    }
 }

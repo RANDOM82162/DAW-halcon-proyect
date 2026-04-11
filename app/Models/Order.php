@@ -19,6 +19,7 @@ class Order extends Model
         'total_amount',
         'notes',
         'user_id',
+        'delivery_photo',
     ];
 
     protected $casts = [

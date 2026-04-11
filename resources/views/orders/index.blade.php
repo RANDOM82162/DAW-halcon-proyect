@@ -61,6 +61,9 @@
                                             <a href="{{ route('orders.show', $order) }}" class="btn btn-sm btn-secondary">
                                                 <svg class="icon me-1"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-eye') }}"></use></svg> Ver
                                             </a>
+                                            <a href="{{ route('orders.photo', $order) }}" class="btn btn-sm btn-success" title="Subir foto de entrega">
+                                                <svg class="icon me-1"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-image') }}"></use></svg> Foto
+                                            </a>
                                             <a href="{{ route('orders.edit', $order) }}" class="btn btn-sm btn-info text-white">
                                                 <svg class="icon me-1"><use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-pencil') }}"></use></svg> Editar
                                             </a>
