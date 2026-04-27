@@ -69,6 +69,13 @@
                     </svg> Pedidos
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->is('inventories*') ? 'active' : '' }}" href="{{ route('inventories.index') }}">
+                    <svg class="nav-icon">
+                        <use xlink:href="{{ asset('assets/icons/sprites/free.svg#cil-storage') }}"></use>
+                    </svg> Inventario
+                </a>
+            </li>
             @endauth
         </ul>
         

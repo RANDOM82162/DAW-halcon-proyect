@@ -20,3 +20,6 @@ Route::patch('orders/{order}/restore', [App\Http\Controllers\OrderController::cl
 Route::get('orders/{order}/photo', [App\Http\Controllers\OrderController::class, 'photoForm'])->name('orders.photo')->middleware('auth');
 Route::post('orders/{order}/photo', [App\Http\Controllers\OrderController::class, 'storePhoto'])->name('orders.storePhoto')->middleware('auth');
 Route::resource('orders', App\Http\Controllers\OrderController::class)->middleware('auth');
+
+// 6. Resource Routes for Inventories
+Route::resource('inventories', App\Http\Controllers\InventoryController::class)->middleware('auth');

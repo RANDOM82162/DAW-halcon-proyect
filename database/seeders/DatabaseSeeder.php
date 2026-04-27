@@ -17,16 +17,16 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        $user = User::firstOrCreate([
-            'email' => 'test@example.com',
-        ], [
-            'name' => 'Test User',
-            'password' => bcrypt('password'),
-        ]);
+        // $user = User::firstOrCreate([
+        //     'email' => 'test@example.com',
+        // ], [
+        //     'name' => 'Test User',
+        //     'password' => bcrypt('password'),
+        // ]);
 
-        // Create some sample orders
-        \App\Models\Order::factory(10)->create([
-            'user_id' => $user->id,
-        ]);
+        // // Create some sample orders
+        // \App\Models\Order::factory(10)->create([
+        //     'user_id' => $user->id,
+        // ]);
     }
 }
