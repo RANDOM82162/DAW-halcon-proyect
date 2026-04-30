@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = [
+  "php82",
+  "php82Extensions.bcmath",
+  "php82Extensions.mbstring",
+  "php82Extensions.pdo_mysql",
+  "nodejs_18",
+  "npm-9_x"
+]
+
+[phases.build]
+cmds = [
+  "composer install --no-dev --optimize-autoloader",
+  "npm install",
+  "npm run build"
+]
