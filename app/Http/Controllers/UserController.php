@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -13,16 +14,12 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::withTrashed()->paginate(10);
-        return view('users.index', compact('users'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('users.create');
+        try {
+            $users = User::withTrashed()->paginate(15);
+            return response()->json($users, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -30,40 +27,36 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:1|confirmed',
-            'role' => 'required|in:admin,manager,employee',
-            'department' => 'nullable|in:sales,purchasing,warehouse,route',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string',
+                'role' => 'required|in:admin,manager,employee',
+                'department' => 'nullable|in:sales,purchasing,warehouse,route',
+            ]);
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'department' => $request->department,
-        ]);
+            $validated['password'] = Hash::make($validated['password']);
+            $user = User::create($validated);
 
-        return redirect()->route('users.index')->with('success', 'Usuario creado correctamente.');
+            return response()->json($user, Response::HTTP_CREATED);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(User $user)
     {
-        // We will just use index/edit for simplicity
-        return redirect()->route('users.index');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(User $user)
-    {
-        return view('users.edit', compact('user'));
+        try {
+            return response()->json($user, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -71,34 +64,39 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:1|confirmed',
-            'role' => 'required|in:admin,manager,employee',
-            'department' => 'nullable|in:sales,purchasing,warehouse,route',
-            'is_active' => 'boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
+                'password' => 'nullable|string',
+                'role' => 'sometimes|in:admin,manager,employee',
+                'department' => 'nullable|in:sales,purchasing,warehouse,route',
+                'is_active' => 'sometimes|boolean',
+            ]);
 
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->role = $request->role;
-        $user->department = $request->department;
+            if (isset($validated['password'])) {
+                $validated['password'] = Hash::make($validated['password']);
+            } else {
+                unset($validated['password']);
+            }
 
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
+            // Handle active/inactive status
+            if (isset($validated['is_active'])) {
+                if (!$validated['is_active']) {
+                    $user->delete(); // Soft delete
+                } elseif ($user->trashed()) {
+                    $user->restore(); // Restore
+                }
+                unset($validated['is_active']);
+            }
+
+            $user->update($validated);
+            return response()->json($user, Response::HTTP_OK);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        // Handle active/inactive status
-        if ($request->has('is_active') && !$request->is_active) {
-            $user->delete(); // Soft delete to make inactive
-        } elseif ($request->is_active && $user->trashed()) {
-            $user->restore(); // Restore if was inactive
-        }
-
-        $user->save();
-
-        return redirect()->route('users.index')->with('success', 'Usuario actualizado correctamente.');
     }
 
     /**
@@ -106,11 +104,15 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        if (auth()->id() === $user->id) {
-            return redirect()->route('users.index')->with('error', 'No puedes eliminarte a ti mismo.');
-        }
+        try {
+            if (auth()->id() === $user->id) {
+                return response()->json(['error' => 'No puedes eliminarte a ti mismo.'], Response::HTTP_FORBIDDEN);
+            }
 
-        $user->delete();
-        return redirect()->route('users.index')->with('success', 'Usuario eliminado correctamente.');
+            $user->delete();
+            return response()->json(['message' => 'Usuario eliminado'], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

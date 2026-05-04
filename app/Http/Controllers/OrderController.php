@@ -4,24 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 
 class OrderController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::with('user')->paginate(10);
-        return view('orders.index', compact('orders'));
-    }
+        try {
+            $query = Order::with('user');
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('orders.create');
+            if ($request->boolean('archived')) {
+                $query = $query->onlyTrashed();
+            }
+
+            $orders = $query->paginate(15);
+            return response()->json($orders, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -29,28 +33,26 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'customer_number' => 'required|string|max:255',
-            'invoice_number' => 'required|string|max:255|unique:orders',
-            'status' => 'required|in:ordered,in_process,in_route,delivered',
-            'order_date' => 'required|date',
-            'delivery_date' => 'nullable|date|after_or_equal:order_date',
-            'total_amount' => 'required|numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'customer_number' => 'required|string|max:255',
+                'invoice_number' => 'required|string|max:255|unique:orders',
+                'status' => 'required|in:pendiente,en-proceso,en-transito,entregado',
+                'order_date' => 'required|date',
+                'delivery_date' => 'nullable|date|after_or_equal:order_date',
+                'total_amount' => 'required|numeric|min:0',
+                'notes' => 'nullable|string',
+            ]);
 
-        Order::create([
-            'customer_number' => $request->customer_number,
-            'invoice_number' => $request->invoice_number,
-            'status' => $request->status,
-            'order_date' => $request->order_date,
-            'delivery_date' => $request->delivery_date,
-            'total_amount' => $request->total_amount,
-            'notes' => $request->notes,
-            'user_id' => auth()->id(),
-        ]);
+            $validated['user_id'] = auth()->id() ?? 1;
+            $order = Order::create($validated);
 
-        return redirect()->route('orders.index')->with('success', 'Pedido creado correctamente.');
+            return response()->json($order, Response::HTTP_CREATED);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -58,15 +60,12 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        return view('orders.show', compact('order'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Order $order)
-    {
-        return view('orders.edit', compact('order'));
+        try {
+            $order->load('user');
+            return response()->json($order, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -74,27 +73,24 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        $request->validate([
-            'customer_number' => 'required|string|max:255',
-            'invoice_number' => 'required|string|max:255|unique:orders,invoice_number,' . $order->id,
-            'status' => 'required|in:ordered,in_process,in_route,delivered',
-            'order_date' => 'required|date',
-            'delivery_date' => 'nullable|date|after_or_equal:order_date',
-            'total_amount' => 'required|numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'customer_number' => 'sometimes|string|max:255',
+                'invoice_number' => 'sometimes|string|max:255|unique:orders,invoice_number,' . $order->id,
+                'status' => 'sometimes|in:pendiente,en-proceso,en-transito,entregado',
+                'order_date' => 'sometimes|date',
+                'delivery_date' => 'nullable|date|after_or_equal:order_date',
+                'total_amount' => 'sometimes|numeric|min:0',
+                'notes' => 'nullable|string',
+            ]);
 
-        $order->update($request->only([
-            'customer_number',
-            'invoice_number',
-            'status',
-            'order_date',
-            'delivery_date',
-            'total_amount',
-            'notes',
-        ]));
-
-        return redirect()->route('orders.index')->with('success', 'Pedido actualizado correctamente.');
+            $order->update($validated);
+            return response()->json($order, Response::HTTP_OK);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -102,63 +98,110 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
-        $order->delete();
-        return redirect()->route('orders.index')->with('success', 'Pedido eliminado correctamente.');
+        try {
+            $order->delete();
+            return response()->json(['message' => 'Pedido eliminado'], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
-     * Display a listing of archived (soft deleted) orders.
+     * Restore an archived order.
      */
-    public function archived()
+    public function restore($id)
     {
-        $archivedOrders = Order::onlyTrashed()->with('user')->paginate(10);
-        return view('orders.archived', compact('archivedOrders'));
-    }
+        try {
+            $order = Order::withTrashed()->findOrFail($id);
 
-    /**
-     * Restore the specified archived order.
-     */
-    public function restore(Order $order)
-    {
-        $order->restore();
-        return redirect()->route('orders.archived')->with('success', 'Pedido restaurado correctamente.');
-    }
-
-    /**
-     * Show the form for uploading delivery photo.
-     */
-    public function photoForm(Order $order)
-    {
-        return view('orders.photo', compact('order'));
-    }
-
-    /**
-     * Store the delivery photo.
-     */
-    public function storePhoto(Request $request, Order $order)
-    {
-        $request->validate([
-            'delivery_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ], [
-            'delivery_photo.required' => 'Debe seleccionar una foto.',
-            'delivery_photo.image' => 'El archivo debe ser una imagen.',
-            'delivery_photo.mimes' => 'La imagen debe ser de tipo: jpeg, png, jpg, gif.',
-            'delivery_photo.max' => 'La imagen no debe superar 2MB.',
-        ]);
-
-        if ($request->hasFile('delivery_photo')) {
-            // Eliminar la foto anterior si existe
-            if ($order->delivery_photo && \Storage::exists('public/' . $order->delivery_photo)) {
-                \Storage::delete('public/' . $order->delivery_photo);
+            if (!$order->trashed()) {
+                return response()->json(['message' => 'El pedido no está archivado'], Response::HTTP_BAD_REQUEST);
             }
 
-            // Almacenar la nueva foto
-            $path = $request->file('delivery_photo')->store('deliveries', 'public');
-            $order->update(['delivery_photo' => $path]);
-
-            return redirect()->route('orders.index')->with('success', 'Foto de entrega guardada correctamente.');
+            $order->restore();
+            $order->load('user');
+            return response()->json($order, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
 
-        return redirect()->back()->with('error', 'Error al procesar la foto.');
+    /**
+     * Permanently delete an archived order.
+     */
+    public function forceDestroy($id)
+    {
+        try {
+            $order = Order::withTrashed()->findOrFail($id);
+
+            if (!$order->trashed()) {
+                return response()->json(['message' => 'El pedido no está archivado'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $order->forceDelete();
+            return response()->json(['message' => 'Pedido eliminado permanentemente'], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+    /**
+     * Search an order publicly by id, invoice_number, or customer_number.
+     */
+    public function publicSearch($identifier)
+    {
+        try {
+            // Strip 'PED-' prefix if present to allow searching by formatted order number
+            $numericId = preg_replace('/^PED-/i', '', $identifier);
+
+            $order = Order::where('id', $numericId)
+                ->orWhere('invoice_number', $identifier)
+                ->orWhere('customer_number', $identifier)
+                ->first();
+
+            if (!$order) {
+                return response()->json(['message' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
+            }
+
+            return response()->json($order, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Upload delivery photo for an order.
+     */
+    public function uploadPhoto(Request $request, $id)
+    {
+        try {
+            $order = Order::findOrFail($id);
+
+            // Manual check for file existence to provide better error messages
+            if (!$request->hasFile('photo')) {
+                return response()->json(['message' => 'No se detectó ningún archivo en la petición. Asegúrate de adjuntar una imagen válida y que no exceda el límite de PHP (2MB por defecto).'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $file = $request->file('photo');
+
+            if (!$file->isValid()) {
+                return response()->json(['message' => 'El archivo subido está corrupto o es inválido. ' . $file->getErrorMessage()], Response::HTTP_BAD_REQUEST);
+            }
+
+            $path = $file->store('delivery_photos', 'public');
+            if (!$path) {
+                return response()->json(['message' => 'El servidor no pudo guardar el archivo en el disco.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $order->delivery_photo = Storage::url($path);
+            $order->save();
+            
+            return response()->json([
+                'message' => 'Foto de entrega subida exitosamente',
+                'delivery_photo' => $order->delivery_photo
+            ], Response::HTTP_OK);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error interno: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Inventory;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class InventoryController extends Controller
 {
@@ -12,16 +13,12 @@ class InventoryController extends Controller
      */
     public function index()
     {
-        $inventories = Inventory::all();
-        return view('inventories.index', compact('inventories'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('inventories.create');
+        try {
+            $inventories = Inventory::paginate(15);
+            return response()->json($inventories, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -29,15 +26,20 @@ class InventoryController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'product_name' => 'required|string|max:255',
-            'quantity' => 'required|integer|min:0',
-            'location' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'product_name' => 'required|string|max:255',
+                'quantity' => 'required|integer|min:0',
+                'location' => 'nullable|string',
+            ]);
 
-        Inventory::create($request->all());
-
-        return redirect()->route('inventories.index')->with('success', 'Inventory created successfully.');
+            $inventory = Inventory::create($validated);
+            return response()->json($inventory, Response::HTTP_CREATED);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -45,15 +47,11 @@ class InventoryController extends Controller
      */
     public function show(Inventory $inventory)
     {
-        return view('inventories.show', compact('inventory'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Inventory $inventory)
-    {
-        return view('inventories.edit', compact('inventory'));
+        try {
+            return response()->json($inventory, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -61,15 +59,20 @@ class InventoryController extends Controller
      */
     public function update(Request $request, Inventory $inventory)
     {
-        $request->validate([
-            'product_name' => 'required|string|max:255',
-            'quantity' => 'required|integer|min:0',
-            'location' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'product_name' => 'sometimes|string|max:255',
+                'quantity' => 'sometimes|integer|min:0',
+                'location' => 'nullable|string',
+            ]);
 
-        $inventory->update($request->all());
-
-        return redirect()->route('inventories.index')->with('success', 'Inventory updated successfully.');
+            $inventory->update($validated);
+            return response()->json($inventory, Response::HTTP_OK);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -77,8 +80,11 @@ class InventoryController extends Controller
      */
     public function destroy(Inventory $inventory)
     {
-        $inventory->delete();
-
-        return redirect()->route('inventories.index')->with('success', 'Inventory deleted successfully.');
+        try {
+            $inventory->delete();
+            return response()->json(['message' => 'Inventario eliminado'], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

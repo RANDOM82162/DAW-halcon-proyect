@@ -20,7 +20,7 @@ class OrderFactory extends Factory
         return [
             'customer_number' => $this->faker->unique()->numerify('CUST-####'),
             'invoice_number' => $this->faker->unique()->numerify('INV-####'),
-            'status' => $this->faker->randomElement(['ordered', 'in_process', 'in_route', 'delivered']),
+            'status' => $this->faker->randomElement(['pendiente', 'en-proceso', 'en-transito', 'entregado']),
             'order_date' => $this->faker->date(),
             'delivery_date' => $this->faker->optional(0.7)->date(),
             'total_amount' => $this->faker->randomFloat(2, 100, 10000),
