@@ -1,36 +1,56 @@
-# Halcon - Sistema de Gestión de Pedidos
+# Halcon - Backend
 
-Este es un proyecto Laravel para la gestión de pedidos en un sistema de almacén. Incluye funcionalidades para usuarios registrados y no registrados, con módulos para usuarios, pedidos y pedidos archivados.
+Este es el cliente backend para el proyecto Halcón, desarrollado en Laravel.
 
-## Vistas
+## Instalación
 
-### Vistas para Usuarios No Registrados
+1. Clona el repositorio:
+   ```bash
+   git clone <url-del-repositorio>
+   cd halcon
+   ```
+2. Instala las dependencias de PHP y Node:
+   ```bash
+   composer install
+   npm install
+   ```
+3. Copia el archivo de entorno y genera la clave de la aplicación:
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+4. Configura tu base de datos en el archivo `.env` y ejecuta las migraciones:
+   ```bash
+   php artisan migrate --seed
+   ```
 
-- **Página principal (Home)**: Incluye un formulario de búsqueda por número de factura.
-  - Si el pedido está en estado "entregado", se muestra la foto de entrega.
-  - Si el pedido está en estado "en proceso", se muestra el nombre del proceso y la fecha.
+## Variables de Entorno
 
-### Vistas para Usuarios Registrados (Protegidas)
+Asegúrate de configurar las siguientes variables principales en tu archivo `.env`:
 
-- **Dashboard**:
-  - Panel principal con enlaces de navegación a:
-    - Usuarios
-    - Pedidos
-    - Pedidos archivados
+- `APP_NAME`: Nombre de la aplicación (ej. `Laravel`).
+- `APP_ENV`: Entorno (ej. `local`, `production`).
+- `APP_KEY`: Clave de la aplicación.
+- `APP_DEBUG`: Habilita o deshabilita el modo debug (`true` o `false`).
+- `APP_URL`: URL base de la aplicación (ej. `http://localhost`).
+- `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`: Credenciales de la base de datos MySQL.
+- `VITE_APP_NAME`: Nombre de la aplicación para Vite.
 
-- **Módulo de Usuarios**:
-  - Lista general de usuarios (activos e inactivos).
-  - Creación de usuarios con opción de asignar rol o departamento.
-  - Edición de usuarios para modificar datos básicos, cambiar departamento o estado (activo/inactivo).
+## Comandos
 
-- **Módulo de Pedidos**:
-  - Lista general de pedidos ordenados.
-  - Creación de pedidos.
-  - Actualización de pedidos.
-  - Cambio de estado del pedido.
-  - Visualización del pedido.
-  - Eliminación lógica de pedidos.
+- Iniciar el servidor de desarrollo de Laravel:
+  ```bash
+  php artisan serve
+  ```
+- Iniciar el servidor de desarrollo de Vite (frontend assets):
+  ```bash
+  npm run dev
+  ```
+- Compilar assets para producción:
+  ```bash
+  npm run build
+  ```
 
-- **Pedidos Archivados**:
-  - Lista de pedidos eliminados lógicamente.
-  - Opción para restaurar pedidos archivados.
+## Licencias
+
+Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
