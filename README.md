@@ -53,4 +53,4 @@ Asegúrate de configurar las siguientes variables principales en tu archivo `.en
 
 ## Licencias
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
+Este proyecto fue desarrollado con fines académicos como parte de la materia de Diseño de Aplicaciones Web.
