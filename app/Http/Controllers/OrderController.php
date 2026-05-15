@@ -6,9 +6,19 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class OrderController extends Controller
+class OrderController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('role:admin,manager', only: ['update']),
+            new Middleware('role:admin', only: ['destroy', 'restore', 'forceDestroy']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */

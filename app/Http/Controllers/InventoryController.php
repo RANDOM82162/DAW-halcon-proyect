@@ -5,9 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class InventoryController extends Controller
+class InventoryController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('role:admin,manager', only: ['store', 'update']),
+            new Middleware('role:admin', only: ['destroy']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
